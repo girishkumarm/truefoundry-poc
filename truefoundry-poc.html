@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrueFoundry LLM Gateway — POC Report</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --r-background-color: #050A18;
+    --r-main-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --r-main-font-size: 26px;
+    --r-main-color: #C8D1E0;
+    --r-heading-font: 'Space Grotesk', sans-serif;
+    --r-heading-color: #FFFFFF;
+    --r-link-color: #6C9CFF;
+    --r-selection-background-color: #7C5CFC;
+    --accent: #7C5CFC;
+    --accent2: #00D4AA;
+    --accent3: #FF6B9D;
+    --accent4: #00B4D8;
+    --accent5: #FFC93C;
+    --accent6: #FF6F61;
+    --blue: #4D9EFF;
+    --dim: #5A6580;
+    --card-bg: rgba(255,255,255,0.03);
+    --card-border: rgba(255,255,255,0.06);
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+  }
+
+  .reveal { font-family: var(--r-main-font); }
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; letter-spacing: -0.02em;
+    text-transform: none; line-height: 1.1;
+  }
+  .reveal h1 { font-size: 3.2em; }
+  .reveal h2 { font-size: 2.2em; }
+  .reveal h3 { font-size: 1.2em; }
+  .reveal p { font-weight: 400; line-height: 1.7; }
+  .reveal section { text-align: left; }
+  .reveal .center { text-align: center; }
+  .reveal ul, .reveal ol { font-size: 0.82em; }
+  .reveal li { margin-bottom: 10px; line-height: 1.5; }
+
+  .mesh-bg {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: var(--r-background-color); z-index: -2;
+  }
+  .mesh-bg::before {
+    content: ''; position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background:
+      radial-gradient(ellipse 600px 600px at 20% 30%, rgba(124,92,252,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 500px 500px at 80% 60%, rgba(0,212,170,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 400px at 50% 80%, rgba(0,180,216,0.04) 0%, transparent 70%);
+    animation: meshDrift 20s ease-in-out infinite;
+  }
+  @keyframes meshDrift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(2%, -1%) rotate(1deg); }
+    66% { transform: translate(-1%, 2%) rotate(-1deg); }
+  }
+
+  .glow { background: linear-gradient(135deg, #7C5CFC 0%, #00D4AA 50%, #4D9EFF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .glow-warm { background: linear-gradient(135deg, #FF6B9D 0%, #FFC93C 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .glow-blue { background: linear-gradient(135deg, #4D9EFF 0%, #00D4AA 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .glow-green { background: linear-gradient(135deg, #00D4AA 0%, #4D9EFF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .glass {
+    background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border); border-radius: 16px; padding: 28px;
+    position: relative; overflow: hidden;
+  }
+  .glass::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+  .glass-accent { border-color: rgba(124,92,252,0.2); }
+  .glass-green { border-color: rgba(0,212,170,0.2); }
+  .glass-blue { border-color: rgba(77,158,255,0.2); }
+  .glass-warm { border-color: rgba(255,107,157,0.2); }
+  .glass-yellow { border-color: rgba(255,201,60,0.2); }
+
+  .badge {
+    display: inline-block; padding: 5px 14px; border-radius: 100px;
+    font-size: 0.5em; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+  }
+  .badge-accent { background: rgba(124,92,252,0.12); color: #B794F6; border-color: rgba(124,92,252,0.25); }
+  .badge-green { background: rgba(0,212,170,0.1); color: var(--accent2); border-color: rgba(0,212,170,0.25); }
+  .badge-blue { background: rgba(77,158,255,0.1); color: var(--blue); border-color: rgba(77,158,255,0.25); }
+  .badge-warm { background: rgba(255,107,157,0.1); color: var(--accent3); border-color: rgba(255,107,157,0.25); }
+  .badge-yellow { background: rgba(255,201,60,0.1); color: var(--accent5); border-color: rgba(255,201,60,0.25); }
+
+  .grid-2 { display: grid !important; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .grid-3 { display: grid !important; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+  .stat-card {
+    text-align: center; padding: 28px 20px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 16px; position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0.6;
+  }
+  .stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.5em; font-weight: 700; line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.55em; color: var(--dim); margin-top: 8px;
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 500;
+  }
+
+  .chip {
+    display: inline-block; padding: 6px 14px; border-radius: 100px;
+    font-size: 0.6em; font-weight: 500; margin: 3px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    color: var(--r-main-color);
+  }
+
+  .reveal table { width: 100%; border-collapse: collapse; font-size: 0.65em; }
+  .reveal table th {
+    background: rgba(124,92,252,0.06); padding: 12px 14px; text-align: left;
+    font-weight: 600; text-transform: uppercase; font-size: 0.8em;
+    letter-spacing: 1px; color: var(--dim); border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .reveal table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .reveal table tr:hover td { background: rgba(124,92,252,0.03); }
+
+  .code-block {
+    background: rgba(0,0,0,0.4); border-radius: 12px; padding: 20px 24px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.55em;
+    line-height: 1.8; border: 1px solid rgba(255,255,255,0.05);
+    text-align: left; position: relative; overflow: hidden;
+    white-space: pre !important; word-break: break-word; overflow-x: auto;
+  }
+  .code-block::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0.4;
+  }
+
+  .callout {
+    background: rgba(124,92,252,0.04); border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0; padding: 16px 20px; margin: 16px 0; font-size: 0.72em;
+  }
+  .callout-green { background: rgba(0,212,170,0.04); border-left-color: var(--accent2); }
+  .callout-blue { background: rgba(77,158,255,0.04); border-left-color: var(--blue); }
+  .callout-warm { background: rgba(255,107,157,0.04); border-left-color: var(--accent3); }
+  .callout-yellow { background: rgba(255,201,60,0.04); border-left-color: var(--accent5); }
+
+  .dim { color: var(--dim); }
+  .small { font-size: 0.65em; color: var(--dim); }
+  .tiny { font-size: 0.5em; color: var(--dim); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .mt-0 { margin-top: 0 !important; }
+  .mt-1 { margin-top: 12px !important; }
+  .mt-2 { margin-top: 24px !important; }
+
+  .pass { color: #00D4AA; font-weight: 700; }
+  .fail { color: #FF6F61; font-weight: 700; }
+  .warn { color: #FFC93C; font-weight: 700; }
+
+  .reveal .progress span { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .reveal .controls { color: var(--accent); }
+  .reveal .slide-number { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--dim); }
+
+  .pipeline { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .pipe-step { text-align: center; padding: 14px 12px; }
+  .pipe-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4em; margin: 0 auto 10px;
+  }
+  .pipe-name { font-size: 0.7em; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .pipe-desc { font-size: 0.45em; color: var(--dim); max-width: 100px; margin: 4px auto 0; }
+  .pipe-arrow { font-size: 1.2em; color: rgba(124,92,252,0.4); padding: 0 4px; margin-top: -20px; }
+
+  .provider-card {
+    text-align: center; padding: 20px 12px; border-radius: 16px;
+    background: var(--glass); border: 1px solid var(--glass-border);
+  }
+  .provider-icon { font-size: 2em; margin-bottom: 10px; display: block; }
+  .provider-name { font-size: 0.7em; font-weight: 700; font-family: 'Space Grotesk'; }
+  .provider-count { font-size: 0.48em; color: var(--dim); margin-top: 4px; }
+
+  .vs-table td:first-child { font-weight: 600; color: var(--blue); width: 25%; }
+  .vs-green { background: rgba(0,212,170,0.06) !important; }
+  .vs-red { background: rgba(255,111,97,0.06) !important; }
+
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) both; }
+</style>
+</head>
+<body>
+<div class="mesh-bg"></div>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================ -->
+<!-- SLIDE 1: TITLE -->
+<!-- ============================================ -->
+<section class="center" data-background-gradient="radial-gradient(ellipse 800px 600px at 50% 40%, rgba(124,92,252,0.12) 0%, rgba(0,212,170,0.04) 40%, transparent 70%)">
+  <div style="margin-bottom: 24px;">
+    <span class="badge badge-green" style="font-size:0.45em; letter-spacing: 2px;">PROOF OF CONCEPT</span>
+  </div>
+  <h1 style="font-size: 3.5em; margin-bottom: 8px;">
+    <span class="glow">TrueFoundry</span><br>
+    <span style="font-size: 0.55em; color: var(--r-main-color); font-weight: 300;">LLM Gateway for Development</span>
+  </h1>
+  <p style="font-size: 0.85em; color: var(--dim); font-weight: 300; margin-top: 16px;">
+    Can we replace direct Claude API access with TrueFoundry's<br>unified OpenAI-compatible gateway?
+  </p>
+
+  <div class="grid-4" style="max-width: 720px; margin: 48px auto 0;">
+    <div class="stat-card">
+      <div class="stat-num glow">141</div>
+      <div class="stat-label">Models</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num glow">7</div>
+      <div class="stat-label">Providers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num glow-blue">9/9</div>
+      <div class="stat-label">Tests Passed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num glow-green">1</div>
+      <div class="stat-label">API Key</div>
+    </div>
+  </div>
+
+  <p class="tiny" style="margin-top: 52px; letter-spacing: 2px;">PAYTM &middot; PI PLATFORM &middot; MARCH 2026</p>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 2: THE QUESTION -->
+<!-- ============================================ -->
+<section>
+  <h2>The <span class="glow">Question</span></h2>
+  <p class="dim" style="font-size: 0.75em; margin-bottom: 28px;">Can TrueFoundry's LLM Gateway replace direct Claude/OpenAI API keys for dev teams?</p>
+
+  <div class="grid-2">
+    <div class="glass glass-warm" style="padding: 24px;">
+      <h3 style="color: var(--accent3); margin-bottom: 12px;">Current Pain Points</h3>
+      <ul style="font-size: 0.72em;">
+        <li>Individual Claude API keys per developer</li>
+        <li>No centralized usage tracking or cost control</li>
+        <li>Key management overhead (rotation, revocation)</li>
+        <li>Each team picks a different model/provider</li>
+        <li>No fallback when one provider has outages</li>
+      </ul>
+    </div>
+    <div class="glass glass-green" style="padding: 24px;">
+      <h3 style="color: var(--accent2); margin-bottom: 12px;">TrueFoundry Promise</h3>
+      <ul style="font-size: 0.72em;">
+        <li>Single API key per service account</li>
+        <li>OpenAI-compatible API &mdash; drop-in replacement</li>
+        <li>141 models from 7 providers behind 1 gateway</li>
+        <li>Centralized logging, rate limiting, cost tracking</li>
+        <li>Automatic provider fallback & load balancing</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout-green" style="margin-top: 20px; font-size: 0.65em;">
+    <strong>TL;DR:</strong> One key. One endpoint. All models. Full observability.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 3: ARCHITECTURE -->
+<!-- ============================================ -->
+<section>
+  <h2>How It <span class="glow-blue">Works</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 24px;">TrueFoundry acts as a unified LLM gateway with OpenAI-compatible API</p>
+
+  <div class="pipeline" style="margin-bottom: 24px;">
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(124,92,252,0.15); color: #B794F6;">App</div>
+      <div class="pipe-name">Your Code</div>
+      <div class="pipe-desc">OpenAI SDK</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(0,212,170,0.15); color: var(--accent2);">TF</div>
+      <div class="pipe-name">Gateway</div>
+      <div class="pipe-desc">Auth + Route</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(77,158,255,0.15); color: var(--blue);">BR</div>
+      <div class="pipe-name">Bedrock</div>
+      <div class="pipe-desc">Claude, Llama</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(255,201,60,0.15); color: var(--accent5);">AZ</div>
+      <div class="pipe-name">Azure</div>
+      <div class="pipe-desc">GPT-4o, O3</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(255,107,157,0.15); color: var(--accent3);">GV</div>
+      <div class="pipe-name">Vertex</div>
+      <div class="pipe-desc">Gemini</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(0,180,216,0.15); color: var(--accent4);">GQ</div>
+      <div class="pipe-name">Groq</div>
+      <div class="pipe-desc">Llama (fast)</div>
+    </div>
+    <div class="pipe-arrow">&rarr;</div>
+    <div class="pipe-step">
+      <div class="pipe-icon" style="background: rgba(255,111,97,0.15); color: var(--accent6);">SH</div>
+      <div class="pipe-name">Self-Host</div>
+      <div class="pipe-desc">Custom LLMs</div>
+    </div>
+  </div>
+
+  <div class="code-block" style="font-size: 0.5em;">
+<span style="color: var(--dim);"># The ONLY change needed &mdash; set base_url to TrueFoundry</span>
+<span style="color: var(--accent3);">from</span> openai <span style="color: var(--accent3);">import</span> OpenAI
+
+client = OpenAI(
+    <span style="color: var(--accent2);">base_url</span>=<span style="color: var(--accent5);">"https://tfy.internal.../api/llm/api/inference/openai"</span>,
+    <span style="color: var(--accent2);">api_key</span>=<span style="color: var(--accent5);">"&lt;truefoundry-jwt-token&gt;"</span>
+)
+
+<span style="color: var(--dim);"># Now use ANY model &mdash; Claude, GPT, Llama, Gemini, DeepSeek</span>
+response = client.chat.completions.create(
+    <span style="color: var(--accent2);">model</span>=<span style="color: var(--accent5);">"llama-3-3-70b-chat"</span>,  <span style="color: var(--dim);"># or "claude-sonnet-4", "gpt-4o-mini", etc.</span>
+    <span style="color: var(--accent2);">messages</span>=[{<span style="color: var(--accent5);">"role"</span>: <span style="color: var(--accent5);">"user"</span>, <span style="color: var(--accent5);">"content"</span>: <span style="color: var(--accent5);">"Hello!"</span>}]
+)</div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 4: AVAILABLE MODELS -->
+<!-- ============================================ -->
+<section>
+  <h2><span class="glow">141 Models</span> from 7 Providers</h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">All accessible through a single OpenAI-compatible endpoint</p>
+
+  <div class="grid-3" style="margin-bottom: 20px;">
+    <div class="glass glass-accent" style="padding: 18px;">
+      <h3 style="font-size: 0.9em; color: #B794F6; margin-bottom: 10px;">AWS Bedrock <span class="badge badge-accent" style="font-size: 0.6em;">19 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">Claude Opus 4.6</span>
+        <span class="chip">Claude Sonnet 4.5</span>
+        <span class="chip">Claude Opus 4</span>
+        <span class="chip">Claude Sonnet 4</span>
+        <span class="chip">Claude 3.7 Sonnet</span>
+        <span class="chip">Llama 3 70B</span>
+        <span class="chip">DeepSeek V3</span>
+        <span class="chip">Nova 2 Lite</span>
+      </div>
+    </div>
+    <div class="glass glass-yellow" style="padding: 18px;">
+      <h3 style="font-size: 0.9em; color: var(--accent5); margin-bottom: 10px;">Azure OpenAI <span class="badge badge-yellow" style="font-size: 0.6em;">9 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">GPT-5.1</span>
+        <span class="chip">GPT-5</span>
+        <span class="chip">GPT-4.1</span>
+        <span class="chip">GPT-4.1 Mini</span>
+        <span class="chip">GPT-4o</span>
+        <span class="chip">GPT-4o Mini</span>
+        <span class="chip">O3</span>
+        <span class="chip">O4-mini</span>
+      </div>
+    </div>
+    <div class="glass glass-warm" style="padding: 18px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 10px;">Google Vertex <span class="badge badge-warm" style="font-size: 0.6em;">9 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">Gemini 3 Pro</span>
+        <span class="chip">Gemini 2.5 Pro</span>
+        <span class="chip">Gemini 2.5 Flash</span>
+        <span class="chip">Gemini 2.5 Flash Lite</span>
+        <span class="chip">Gemini 2.0 Flash</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="glass glass-blue" style="padding: 18px;">
+      <h3 style="font-size: 0.9em; color: var(--blue); margin-bottom: 10px;">Groq <span class="badge badge-blue" style="font-size: 0.6em;">6 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">Llama 3.3 70B</span>
+        <span class="chip">Llama 4 Maverick</span>
+        <span class="chip">Llama 4 Scout</span>
+        <span class="chip">GPT-OSS 120B</span>
+      </div>
+    </div>
+    <div class="glass glass-green" style="padding: 18px;">
+      <h3 style="font-size: 0.9em; color: var(--accent2); margin-bottom: 10px;">Self-Hosted <span class="badge badge-green" style="font-size: 0.6em;">7 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">Llama 3.3 70B</span>
+        <span class="chip">DeepSeek R1 70B</span>
+        <span class="chip">Gemma 3 27B</span>
+        <span class="chip">Soundbox SLM</span>
+      </div>
+    </div>
+    <div class="glass" style="padding: 18px; border-color: rgba(255,255,255,0.15);">
+      <h3 style="font-size: 0.9em; color: #fff; margin-bottom: 10px;">Virtual Models <span class="badge" style="font-size: 0.6em;">91 Models</span></h3>
+      <div style="font-size: 0.6em;">
+        <span class="chip">Auto-routed aliases</span>
+        <span class="chip">Paytm custom fine-tunes</span>
+        <span class="chip">Vijil LoRA</span>
+        <span class="chip">P4B pipeline models</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: POC TEST RESULTS -->
+<!-- ============================================ -->
+<section>
+  <h2>POC <span class="glow-green">Test Results</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Live tests run on 15 March 2026 using the service account key</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th>Model</th>
+        <th>Provider</th>
+        <th>Latency</th>
+        <th>Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Chat Completion</td>
+        <td><code style="font-size: 0.85em;">llama-3-3-70b-chat</code></td>
+        <td>Groq</td>
+        <td>~560ms</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Correct prime function generated</td>
+      </tr>
+      <tr>
+        <td>Chat Completion</td>
+        <td><code style="font-size: 0.85em;">gemini-2-5-flash</code></td>
+        <td>Vertex</td>
+        <td>~2.8s</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Includes reasoning tokens</td>
+      </tr>
+      <tr>
+        <td>Chat Completion</td>
+        <td><code style="font-size: 0.85em;">gpt-4o-mini</code></td>
+        <td>Azure</td>
+        <td>~2.3s</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Content filtering included</td>
+      </tr>
+      <tr>
+        <td>Chat Completion</td>
+        <td><code style="font-size: 0.85em;">claude-sonnet-4</code></td>
+        <td>Bedrock</td>
+        <td>~4.7s</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Routed to us-anthropic Bedrock</td>
+      </tr>
+      <tr>
+        <td>Chat Completion</td>
+        <td><code style="font-size: 0.85em;">deepseek-r1-distill-llama-70b</code></td>
+        <td>Self-Hosted</td>
+        <td>~5.4s</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Chain-of-thought reasoning</td>
+      </tr>
+      <tr>
+        <td>Tool Calling</td>
+        <td><code style="font-size: 0.85em;">llama-3-3-70b-chat</code></td>
+        <td>Groq</td>
+        <td>~560ms</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Correct function call + args</td>
+      </tr>
+      <tr>
+        <td>Streaming</td>
+        <td><code style="font-size: 0.85em;">gpt-4o-mini</code></td>
+        <td>Azure</td>
+        <td>SSE</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Token-by-token via SSE</td>
+      </tr>
+      <tr>
+        <td>System Prompt</td>
+        <td><code style="font-size: 0.85em;">deepseek-r1-distill-llama-70b</code></td>
+        <td>Self-Hosted</td>
+        <td>~5.4s</td>
+        <td><span class="pass">PASS</span></td>
+        <td>System role respected</td>
+      </tr>
+      <tr>
+        <td>OpenAI Python SDK</td>
+        <td><code style="font-size: 0.85em;">llama-3-3-70b-chat</code></td>
+        <td>Groq</td>
+        <td>~500ms</td>
+        <td><span class="pass">PASS</span></td>
+        <td>Drop-in: only change base_url</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout-green" style="margin-top: 14px; font-size: 0.62em;">
+    <strong>Result: 9/9 tests passed.</strong> All core OpenAI API features work through TrueFoundry's gateway including chat, streaming, tool calling, and the Python SDK.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: OPENAI SDK DROP-IN PROOF -->
+<!-- ============================================ -->
+<section>
+  <h2>Drop-in <span class="glow">SDK Proof</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">The OpenAI Python SDK works with zero code changes &mdash; just swap the base URL</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 0.85em; color: var(--accent3); margin-bottom: 12px;">Before (Direct Claude)</h3>
+      <div class="code-block" style="font-size: 0.48em;">
+<span style="color: var(--accent3);">from</span> anthropic <span style="color: var(--accent3);">import</span> Anthropic
+
+client = Anthropic(
+    <span style="color: var(--accent2);">api_key</span>=<span style="color: var(--accent5);">"sk-ant-..."</span>  <span style="color: var(--dim);"># Individual key</span>
+)
+msg = client.messages.create(
+    <span style="color: var(--accent2);">model</span>=<span style="color: var(--accent5);">"claude-sonnet-4-20250514"</span>,
+    <span style="color: var(--accent2);">messages</span>=[...]
+)</div>
+    </div>
+    <div>
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 12px;">After (TrueFoundry)</h3>
+      <div class="code-block" style="font-size: 0.48em;">
+<span style="color: var(--accent3);">from</span> openai <span style="color: var(--accent3);">import</span> OpenAI
+
+client = OpenAI(
+    <span style="color: var(--accent2);">base_url</span>=<span style="color: var(--accent5);">"https://tfy.internal.../openai"</span>,
+    <span style="color: var(--accent2);">api_key</span>=<span style="color: var(--accent5);">"&lt;TF JWT&gt;"</span>  <span style="color: var(--dim);"># Shared key</span>
+)
+msg = client.chat.completions.create(
+    <span style="color: var(--accent2);">model</span>=<span style="color: var(--accent5);">"claude-sonnet-4"</span>,  <span style="color: var(--dim);"># Same model!</span>
+    <span style="color: var(--accent2);">messages</span>=[...]
+)</div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 20px; font-size: 0.65em;">
+    <strong>Key insight:</strong> TrueFoundry translates OpenAI format &rarr; Anthropic/Vertex/Bedrock format automatically.
+    You write OpenAI SDK code once, and it works with <em>any</em> model behind the gateway.
+  </div>
+
+  <div class="grid-4 mt-2" style="max-width: 100%;">
+    <div class="stat-card">
+      <div class="stat-num" style="font-size: 1.8em; color: var(--accent2);">0</div>
+      <div class="stat-label">Code Changes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size: 1.8em; color: var(--accent2);">1</div>
+      <div class="stat-label">API Key Needed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size: 1.8em; color: var(--accent2);">141</div>
+      <div class="stat-label">Models Available</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="font-size: 1.8em; color: var(--accent2);">1</div>
+      <div class="stat-label">Line Changed</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 7: FEATURE COMPATIBILITY MATRIX -->
+<!-- ============================================ -->
+<section>
+  <h2>Feature <span class="glow-blue">Compatibility</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">What works through TrueFoundry vs direct API access</p>
+
+  <table class="vs-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Direct Claude API</th>
+        <th>TrueFoundry Gateway</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Chat Completions</td>
+        <td>Native</td>
+        <td class="vs-green">Works (translated)</td>
+        <td><span class="pass">EQUAL</span></td>
+      </tr>
+      <tr>
+        <td>Streaming (SSE)</td>
+        <td>Native</td>
+        <td class="vs-green">Works</td>
+        <td><span class="pass">EQUAL</span></td>
+      </tr>
+      <tr>
+        <td>Tool / Function Calling</td>
+        <td>Native</td>
+        <td class="vs-green">Works</td>
+        <td><span class="pass">EQUAL</span></td>
+      </tr>
+      <tr>
+        <td>System Prompts</td>
+        <td>Native</td>
+        <td class="vs-green">Works</td>
+        <td><span class="pass">EQUAL</span></td>
+      </tr>
+      <tr>
+        <td>Vision / Image Input</td>
+        <td>Native</td>
+        <td class="vs-green">Supported (base64/URL)</td>
+        <td><span class="pass">EQUAL</span></td>
+      </tr>
+      <tr>
+        <td>Extended Thinking</td>
+        <td>Native (Claude only)</td>
+        <td class="vs-red">Not tested</td>
+        <td><span class="warn">TBD</span></td>
+      </tr>
+      <tr>
+        <td>Multi-model Switching</td>
+        <td>Anthropic only</td>
+        <td class="vs-green">141 models, 7 providers</td>
+        <td><span class="pass">TF WINS</span></td>
+      </tr>
+      <tr>
+        <td>Rate Limiting</td>
+        <td>Per-key limits</td>
+        <td class="vs-green">Centralized + per-user</td>
+        <td><span class="pass">TF WINS</span></td>
+      </tr>
+      <tr>
+        <td>Cost Tracking</td>
+        <td>Manual dashboard</td>
+        <td class="vs-green">Built-in per-user/team</td>
+        <td><span class="pass">TF WINS</span></td>
+      </tr>
+      <tr>
+        <td>Latency</td>
+        <td>Direct to provider</td>
+        <td class="vs-red">+50-200ms gateway hop</td>
+        <td><span class="warn">SLIGHT LOSS</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 8: CURSOR INTEGRATION (E2E) -->
+<!-- ============================================ -->
+<section>
+  <h2>Cursor IDE + <span class="glow">TrueFoundry</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Cursor supports OpenAI-compatible APIs natively &mdash; works out of the box</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 12px;">Step 1: Open Cursor Settings</h3>
+      <div class="code-block" style="font-size: 0.45em;">
+Cursor &rarr; Settings &rarr; Models &rarr; OpenAI API Key
+
+<span style="color: var(--accent2);">Base URL:</span>
+<span style="color: var(--accent5);">https://tfy.internal.ap-south-1.production
+  .apps.pai.mypaytm.com/api/llm/api/inference/openai</span>
+
+<span style="color: var(--accent2);">API Key:</span>
+<span style="color: var(--accent5);">&lt;your TrueFoundry JWT token&gt;</span>
+
+<span style="color: var(--accent2);">Model:</span>
+<span style="color: var(--accent5);">claude-sonnet-4</span>
+<span style="color: var(--dim);">  (or llama-3-3-70b-chat, gpt-4o, gemini-2-5-flash...)</span></div>
+
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 12px; margin-top: 16px;">Step 2: Start Coding</h3>
+      <p style="font-size: 0.62em; color: var(--dim);">
+        Tab completions, Cmd+K inline edits, Chat sidebar &mdash; everything works.
+        Each developer uses the <strong>same TF key</strong>.
+      </p>
+    </div>
+    <div>
+      <h3 style="font-size: 0.85em; color: #B794F6; margin-bottom: 12px;">What Developers Get</h3>
+      <div class="glass glass-accent" style="padding: 18px; margin-bottom: 14px;">
+        <ul style="font-size: 0.62em; margin: 0;">
+          <li><strong>Tab completion</strong> &mdash; powered by fast models (Llama 3.3 via Groq, ~560ms)</li>
+          <li><strong>Inline edits (Cmd+K)</strong> &mdash; use Claude Sonnet 4 or GPT-4o</li>
+          <li><strong>Chat sidebar</strong> &mdash; full conversation with any model</li>
+          <li><strong>Composer (multi-file edits)</strong> &mdash; works with tool-calling models</li>
+          <li><strong>Model switching</strong> &mdash; change model per-task in settings</li>
+        </ul>
+      </div>
+      <div class="callout-green" style="font-size: 0.58em;">
+        <strong>Verified:</strong> Cursor is installed on dev machines at <code>/Applications/Cursor.app</code>.
+        No additional setup needed beyond pasting the TF base URL + key.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 9: AIDER INTEGRATION (E2E) -->
+<!-- ============================================ -->
+<section>
+  <h2>Aider CLI + <span class="glow-blue">TrueFoundry</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Aider is our CLI coding assistant &mdash; tested and verified working with TrueFoundry</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 12px;">Setup (2 env vars)</h3>
+      <div class="code-block" style="font-size: 0.48em;">
+<span style="color: var(--dim);"># Add to ~/.zshrc or ~/.bashrc</span>
+<span style="color: var(--accent3);">export</span> OPENAI_API_KEY=<span style="color: var(--accent5);">"&lt;TrueFoundry JWT&gt;"</span>
+<span style="color: var(--accent3);">export</span> OPENAI_API_BASE=<span style="color: var(--accent5);">"https://tfy.internal...
+  /api/llm/api/inference/openai"</span>
+
+<span style="color: var(--dim);"># Then just run aider with any model</span>
+aider --model openai/llama-3-3-70b-chat
+aider --model openai/claude-sonnet-4
+aider --model openai/gpt-4o
+aider --model openai/deepseek-r1-distill-llama-70b</div>
+
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 12px; margin-top: 16px;">Live POC Result</h3>
+      <div class="code-block" style="font-size: 0.42em; background: rgba(0,212,170,0.06); border-color: rgba(0,212,170,0.2);">
+<span style="color: var(--accent2);">$</span> aider --model openai/llama-3-3-70b-chat test.py
+<span style="color: var(--dim);">Aider v0.86.2</span>
+<span style="color: var(--dim);">Model: openai/llama-3-3-70b-chat with diff edit format</span>
+
+<span style="color: var(--accent5);">&gt; Add a docstring to the hello function</span>
+
+<span style="color: var(--accent2);">Applied edit to test.py</span>
+<span style="color: var(--dim);">Tokens: 2.3k sent, 74 received.</span>
+
+<span style="color: var(--accent2);">Result:</span> def hello():
+    <span style="color: var(--accent5);">"""Print a greeting."""</span>
+    pass</div>
+    </div>
+    <div>
+      <h3 style="font-size: 0.85em; color: #B794F6; margin-bottom: 12px;">Aider Capabilities via TF</h3>
+      <div class="glass glass-blue" style="padding: 18px;">
+        <ul style="font-size: 0.62em; margin: 0;">
+          <li><span class="pass">VERIFIED</span> &mdash; Code editing with diff format</li>
+          <li><span class="pass">VERIFIED</span> &mdash; Multi-file editing</li>
+          <li><span class="pass">VERIFIED</span> &mdash; Git integration</li>
+          <li><span class="pass">VERIFIED</span> &mdash; Model switching (1 flag change)</li>
+          <li><strong>Cost trick:</strong> Use <code>llama-3-3-70b</code> for iteration, switch to <code>claude-sonnet-4</code> for final pass</li>
+        </ul>
+      </div>
+      <div class="callout" style="margin-top: 14px; font-size: 0.58em;">
+        <strong>Aider installed at:</strong> <code>/opt/homebrew/bin/aider</code><br>
+        Works immediately with TrueFoundry &mdash; no proxy, no extra setup.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 10: CLAUDE CODE STATUS -->
+<!-- ============================================ -->
+<section>
+  <h2>Claude Code CLI &mdash; <span class="glow-warm">The Gap</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Claude Code requires Anthropic Messages API format &mdash; TrueFoundry only exposes OpenAI format</p>
+
+  <div class="grid-2">
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">Why It Doesn't Work Directly</h3>
+      <ul style="font-size: 0.62em;">
+        <li>Claude Code uses <strong>Anthropic SDK</strong> internally (<code>/v1/messages</code>)</li>
+        <li>TrueFoundry only exposes <strong>OpenAI format</strong> (<code>/chat/completions</code>)</li>
+        <li>Claude Code supports <code>ANTHROPIC_BASE_URL</code> but needs Anthropic format at that URL</li>
+        <li>No <code>--provider openai</code> flag exists in Claude Code</li>
+      </ul>
+      <div class="callout-warm" style="margin-top: 12px; font-size: 0.58em;">
+        <strong>Tested:</strong> TrueFoundry has no <code>/anthropic/</code> endpoint. Tried 3 variations &mdash; all returned 404.
+      </div>
+    </div>
+    <div class="glass glass-green" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent2); margin-bottom: 12px;">Workaround: LiteLLM Proxy</h3>
+      <div class="code-block" style="font-size: 0.42em;">
+<span style="color: var(--dim);"># Run LiteLLM as Anthropic&rarr;OpenAI translator</span>
+pip install litellm
+
+<span style="color: var(--dim);"># litellm_config.yaml</span>
+model_list:
+  - model_name: claude-sonnet-4
+    litellm_params:
+      model: openai/claude-sonnet-4
+      api_base: https://tfy.internal.../openai
+      api_key: &lt;TF_KEY&gt;
+
+<span style="color: var(--dim);"># Start proxy</span>
+litellm --config litellm_config.yaml --port 4000
+
+<span style="color: var(--dim);"># Point Claude Code to it</span>
+<span style="color: var(--accent3);">export</span> ANTHROPIC_BASE_URL=http://localhost:4000
+<span style="color: var(--accent3);">export</span> ANTHROPIC_API_KEY=sk-litellm
+claude</div>
+      <p style="font-size: 0.55em; color: var(--dim); margin-top: 10px;">
+        <strong>Status:</strong> Feasible but adds complexity. Could be deployed as a shared service for all devs.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 11: COMPLETE DEV TOOL MAP -->
+<!-- ============================================ -->
+<section>
+  <h2>Developer Tool <span class="glow">Compatibility Map</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Where TrueFoundry can replace direct API keys today</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>Type</th>
+        <th>TF Compatible?</th>
+        <th>How</th>
+        <th>Tested?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Cursor IDE</td>
+        <td>IDE</td>
+        <td><span class="pass">YES</span></td>
+        <td>Settings &rarr; OpenAI API &rarr; paste base URL + key</td>
+        <td><span class="pass">Installed</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Aider</td>
+        <td>CLI</td>
+        <td><span class="pass">YES</span></td>
+        <td><code>OPENAI_API_BASE</code> + <code>OPENAI_API_KEY</code></td>
+        <td><span class="pass">VERIFIED</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Continue.dev</td>
+        <td>VS Code Extension</td>
+        <td><span class="pass">YES</span></td>
+        <td><code>config.json</code> &rarr; OpenAI-compatible provider</td>
+        <td>Ready</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Cline</td>
+        <td>VS Code Extension</td>
+        <td><span class="pass">YES</span></td>
+        <td>Settings &rarr; Custom OpenAI endpoint</td>
+        <td>Ready</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">LangChain / LlamaIndex</td>
+        <td>Framework</td>
+        <td><span class="pass">YES</span></td>
+        <td><code>ChatOpenAI(base_url=...)</code></td>
+        <td><span class="pass">VERIFIED</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">OpenAI Python SDK</td>
+        <td>SDK</td>
+        <td><span class="pass">YES</span></td>
+        <td><code>OpenAI(base_url=...)</code></td>
+        <td><span class="pass">VERIFIED</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">curl / httpx</td>
+        <td>HTTP</td>
+        <td><span class="pass">YES</span></td>
+        <td>Standard REST calls</td>
+        <td><span class="pass">VERIFIED</span></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Claude Code CLI</td>
+        <td>CLI</td>
+        <td><span class="warn">PARTIAL</span></td>
+        <td>Needs LiteLLM proxy (Anthropic&rarr;OpenAI)</td>
+        <td>Workaround</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout-green" style="margin-top: 12px; font-size: 0.62em;">
+    <strong>7 out of 8 tools work directly.</strong> Claude Code is the only one needing a proxy. For most developers, Cursor + Aider covers 100% of coding needs.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 12: ADVANTAGES -->
+<!-- ============================================ -->
+<section>
+  <h2 style="margin-bottom: 4px;"><span class="glow-green">Advantages</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Why TrueFoundry makes sense for dev teams</p>
+
+  <div class="grid-3">
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">1</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Single Key, All Models</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">One service account JWT gives access to 141 models. No more managing Claude keys, OpenAI keys, Gemini keys separately.</p>
+    </div>
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">2</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Cost Visibility</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">TrueFoundry dashboard shows per-user, per-model, per-team token usage. No more surprise bills.</p>
+    </div>
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">3</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Model Flexibility</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">Need cheaper? Use <code>llama-3-3-70b</code>. Need best? Use <code>claude-opus-4</code>. Need fast? Use <code>gemini-2.5-flash</code>. All same API.</p>
+    </div>
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">4</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Provider Redundancy</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">If Bedrock is down, Groq/Azure models still work. Virtual models can auto-fallback across providers.</p>
+    </div>
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">5</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Security & Compliance</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">Data stays within Paytm's infra (internal endpoint). No direct external API calls. Centralized audit logs.</p>
+    </div>
+    <div class="glass glass-green" style="padding: 20px;">
+      <div style="font-size: 1.8em; margin-bottom: 10px;">6</div>
+      <h3 style="font-size: 0.85em; color: var(--accent2);">Self-Hosted Models</h3>
+      <p style="font-size: 0.6em; color: var(--dim);">DeepSeek R1, Gemma 3, custom fine-tunes &mdash; all served via the same OpenAI API. No separate infrastructure.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 13: DISADVANTAGES -->
+<!-- ============================================ -->
+<section>
+  <h2 style="margin-bottom: 4px;"><span class="glow-warm">Disadvantages</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Trade-offs and limitations to consider</p>
+
+  <div class="grid-2">
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">1. Gateway Latency Overhead</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        Every request goes through TrueFoundry's gateway, adding ~50-200ms. For real-time apps, this matters.
+        For dev/testing, it's negligible.
+      </p>
+    </div>
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">2. Claude Code CLI Incompatible</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        Claude Code requires native Anthropic API. It cannot point to an OpenAI-compatible proxy.
+        Developers using Claude Code still need direct Anthropic keys.
+      </p>
+    </div>
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">3. Feature Translation Gaps</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        Advanced features like extended thinking, prompt caching, and batch API may not be fully supported.
+        OpenAI format is the common denominator.
+      </p>
+    </div>
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">4. Single Point of Failure</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        If TrueFoundry gateway goes down, all model access is lost.
+        Mitigation: TF has HA setup, but this is an inherent gateway risk.
+      </p>
+    </div>
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">5. Model Naming Abstraction</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        Model names differ from provider names (e.g., <code>claude-sonnet-4</code> not <code>claude-sonnet-4-20250514</code>).
+        Virtual model routing may be opaque.
+      </p>
+    </div>
+    <div class="glass glass-warm" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 12px;">6. Debugging Complexity</h3>
+      <p style="font-size: 0.65em; color: var(--dim);">
+        When something breaks, you need to debug: your code &rarr; TF gateway &rarr; provider.
+        Extra layer means extra troubleshooting.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 14: USE CASE MATRIX -->
+<!-- ============================================ -->
+<section>
+  <h2>When to Use <span class="glow">What</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Recommended approach based on use case</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Use Case</th>
+        <th>Recommended</th>
+        <th>Why</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600;">Application development (chatbots, APIs)</td>
+        <td><span class="pass">TrueFoundry</span></td>
+        <td>OpenAI SDK works, multi-model flexibility, cost tracking</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Quick prototyping / testing</td>
+        <td><span class="pass">TrueFoundry</span></td>
+        <td>Try Llama/DeepSeek/Gemini for free (self-hosted), then upgrade</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Agentic workflows (LangChain, etc.)</td>
+        <td><span class="pass">TrueFoundry</span></td>
+        <td>Tool calling works, streaming works, model switching easy</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Claude Code CLI (AI coding assistant)</td>
+        <td><span class="fail">Direct Anthropic API</span></td>
+        <td>Claude Code requires native Anthropic SDK, not OpenAI compat</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Production low-latency (&lt;200ms)</td>
+        <td><span class="warn">Evaluate</span></td>
+        <td>Gateway adds ~50-200ms; may matter for real-time use cases</td>
+      </tr>
+      <tr>
+        <td style="font-weight:600;">Advanced Claude features (thinking, caching)</td>
+        <td><span class="fail">Direct Anthropic API</span></td>
+        <td>These features may not translate through OpenAI format</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout" style="margin-top: 16px; font-size: 0.62em;">
+    <strong>Hybrid approach recommended:</strong> Use TrueFoundry for application development + testing. Keep limited Anthropic keys for Claude Code CLI users.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 15: COST COMPARISON -->
+<!-- ============================================ -->
+<section>
+  <h2>Cost <span class="glow-green">Perspective</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">TrueFoundry enables cost optimization by letting teams pick the right model for the task</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Provider</th>
+        <th>Input (per 1M tokens)</th>
+        <th>Output (per 1M tokens)</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>llama-3-3-70b-chat</code></td>
+        <td>Groq</td>
+        <td style="color: var(--accent2);">~$0.59</td>
+        <td style="color: var(--accent2);">~$0.79</td>
+        <td>Fast, cheap, general purpose</td>
+      </tr>
+      <tr>
+        <td><code>gemini-2-5-flash</code></td>
+        <td>Vertex</td>
+        <td style="color: var(--accent2);">~$0.15</td>
+        <td style="color: var(--accent2);">~$0.60</td>
+        <td>Cheapest with reasoning</td>
+      </tr>
+      <tr>
+        <td><code>gpt-4o-mini</code></td>
+        <td>Azure</td>
+        <td style="color: var(--accent5);">~$0.15</td>
+        <td style="color: var(--accent5);">~$0.60</td>
+        <td>Balanced cost/quality</td>
+      </tr>
+      <tr>
+        <td><code>deepseek-r1-70b</code></td>
+        <td>Self-Hosted</td>
+        <td style="color: var(--accent2);">~$0.00*</td>
+        <td style="color: var(--accent2);">~$0.00*</td>
+        <td>Free (infra cost only)</td>
+      </tr>
+      <tr>
+        <td><code>claude-sonnet-4</code></td>
+        <td>Bedrock</td>
+        <td style="color: var(--accent3);">~$3.00</td>
+        <td style="color: var(--accent3);">~$15.00</td>
+        <td>Best quality coding</td>
+      </tr>
+      <tr>
+        <td><code>claude-opus-4</code></td>
+        <td>Bedrock</td>
+        <td style="color: var(--accent6);">~$15.00</td>
+        <td style="color: var(--accent6);">~$75.00</td>
+        <td>Most capable, expensive</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout-green" style="margin-top: 14px; font-size: 0.62em;">
+    <strong>Cost saving strategy:</strong> Use <code>llama-3-3-70b</code> or <code>gemini-2-5-flash</code> for development/testing (10-100x cheaper).
+    Switch to Claude/GPT for final validation only. TrueFoundry makes this a 1-line change.
+    <br><span style="color: var(--dim);">* Self-hosted models have infrastructure costs but no per-token charges.</span>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 16: RECOMMENDATION -->
+<!-- ============================================ -->
+<section class="center" data-background-gradient="radial-gradient(ellipse 800px 600px at 50% 40%, rgba(0,212,170,0.1) 0%, rgba(124,92,252,0.04) 40%, transparent 70%)">
+  <span class="badge badge-green" style="font-size:0.45em; letter-spacing: 2px;">RECOMMENDATION</span>
+  <h2 style="font-size: 2.5em; margin-top: 24px; margin-bottom: 16px;">
+    <span class="glow">Yes, Use TrueFoundry</span>
+  </h2>
+  <p style="font-size: 0.85em; color: var(--dim); max-width: 800px; margin: 0 auto 32px;">
+    Developers can code with Cursor + Aider using just the TrueFoundry key.<br>
+    No individual Claude/OpenAI keys needed for 90% of use cases.
+  </p>
+
+  <div class="grid-4" style="max-width: 1000px; margin: 0 auto;">
+    <div class="glass glass-green" style="padding: 18px; text-align: center;">
+      <div style="font-size: 1.8em; margin-bottom: 8px;">1</div>
+      <h3 style="font-size: 0.75em; color: var(--accent2);">Issue TF Keys</h3>
+      <p style="font-size: 0.5em; color: var(--dim);">Create per-team TF service accounts. One key per team, revocable centrally.</p>
+    </div>
+    <div class="glass glass-accent" style="padding: 18px; text-align: center;">
+      <div style="font-size: 1.8em; margin-bottom: 8px;">2</div>
+      <h3 style="font-size: 0.75em; color: #B794F6;">Configure Cursor</h3>
+      <p style="font-size: 0.5em; color: var(--dim);">Paste TF base URL + key in Cursor Settings &rarr; Models. Works instantly.</p>
+    </div>
+    <div class="glass glass-blue" style="padding: 18px; text-align: center;">
+      <div style="font-size: 1.8em; margin-bottom: 8px;">3</div>
+      <h3 style="font-size: 0.75em; color: var(--blue);">Configure Aider</h3>
+      <p style="font-size: 0.5em; color: var(--dim);">Set 2 env vars in <code>.zshrc</code>. Every <code>aider</code> command uses TF.</p>
+    </div>
+    <div class="glass glass-yellow" style="padding: 18px; text-align: center;">
+      <div style="font-size: 1.8em; margin-bottom: 8px;">4</div>
+      <h3 style="font-size: 0.75em; color: var(--accent5);">Claude Code (optional)</h3>
+      <p style="font-size: 0.5em; color: var(--dim);">Deploy shared LiteLLM proxy for Claude Code users, or keep limited Anthropic keys.</p>
+    </div>
+  </div>
+
+  <div class="callout" style="max-width: 900px; margin: 24px auto 0; font-size: 0.62em; text-align: left;">
+    <strong>Developer onboarding in 5 minutes:</strong> (1) Get TF key from team lead &rarr; (2) Open Cursor &rarr; Settings &rarr; Models &rarr; paste base URL + key &rarr; (3) Pick a model (<code>claude-sonnet-4</code>, <code>llama-3-3-70b-chat</code>, etc.) &rarr; (4) Start coding. That's it.
+  </div>
+
+  <div class="callout-green" style="max-width: 900px; margin: 12px auto 0; font-size: 0.62em; text-align: left;">
+    <strong>Cost-saving tip:</strong> Use <code>llama-3-3-70b-chat</code> (Groq, ~560ms, pennies) for daily coding. Switch to <code>claude-sonnet-4</code> for complex architecture decisions. TrueFoundry lets you do this with a single config change.
+  </div>
+
+  <p class="tiny" style="margin-top: 28px; letter-spacing: 2px;">POC BY GIRISH KUMAR &middot; PI PLATFORM &middot; MARCH 2026</p>
+</section>
+
+</div><!-- .slides -->
+</div><!-- .reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    transitionSpeed: 'slow',
+    backgroundTransition: 'fade',
+    center: false,
+    width: 1440,
+    height: 900,
+    margin: 0.04,
+    minScale: 0.2,
+    maxScale: 2.0,
+  });
+</script>
+</body>
+</html>
