@@ -1170,73 +1170,180 @@ claude</div>
 </section>
 
 <!-- ============================================ -->
-<!-- SLIDE 15: COST COMPARISON -->
+<!-- SLIDE 15: CURSOR FREE VS PAID + VS CODE -->
 <!-- ============================================ -->
 <section>
-  <h2>Cost <span class="glow-green">Perspective</span></h2>
-  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">TrueFoundry enables cost optimization by letting teams pick the right model for the task</p>
+  <h2>Cursor <span class="glow-warm">Free vs Paid</span> + VS Code</h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">With TrueFoundry, you don't need Cursor Pro. Free Cursor or free VS Code + extensions = same result.</p>
+
+  <div class="grid-3">
+    <div class="glass glass-warm" style="padding: 18px;">
+      <h3 style="font-size: 0.8em; color: var(--accent3);">Cursor Pro <span class="badge badge-warm" style="font-size:0.6em;">$20/mo</span></h3>
+      <ul style="font-size: 0.55em; margin: 10px 0 0;">
+        <li>Includes credit pool for Cursor's models</li>
+        <li>Premium model access (GPT-4o, Claude)</li>
+        <li>Unlimited tab completions</li>
+      </ul>
+      <div class="callout-warm" style="font-size: 0.5em; margin-top: 10px;">
+        <strong>With TrueFoundry:</strong> You bypass Cursor's credits entirely.
+        You use your OWN models via TF. <strong>Pro plan is wasted money.</strong>
+      </div>
+    </div>
+    <div class="glass glass-green" style="padding: 18px;">
+      <h3 style="font-size: 0.8em; color: var(--accent2);">Cursor Free <span class="badge badge-green" style="font-size:0.6em;">$0/mo</span></h3>
+      <ul style="font-size: 0.55em; margin: 10px 0 0;">
+        <li>2,000 completions/month (Cursor's models)</li>
+        <li>50 slow premium requests</li>
+        <li><strong>BUT: Custom API key = unlimited</strong></li>
+      </ul>
+      <div class="callout-green" style="font-size: 0.5em; margin-top: 10px;">
+        <strong>With TrueFoundry:</strong> Set custom OpenAI base URL + TF key.
+        <strong>Unlimited requests. $0 license cost.</strong> You only pay model tokens via TF.
+      </div>
+    </div>
+    <div class="glass glass-blue" style="padding: 18px;">
+      <h3 style="font-size: 0.8em; color: var(--blue);">VS Code + Extensions <span class="badge badge-blue" style="font-size:0.6em;">$0/mo</span></h3>
+      <ul style="font-size: 0.55em; margin: 10px 0 0;">
+        <li><strong>Continue.dev</strong> &mdash; free, open source</li>
+        <li><strong>Cline</strong> &mdash; free, agentic coding</li>
+        <li>Both support OpenAI-compatible APIs</li>
+      </ul>
+      <div class="callout-blue" style="font-size: 0.5em; margin-top: 10px;">
+        <strong>With TrueFoundry:</strong> Same setup &mdash; paste base URL + key.
+        Chat, inline edits, tab completion all work. <strong>Zero license fees.</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top: 14px; font-size: 0.62em;">
+    <strong>Recommendation:</strong> Stop renewing Cursor Pro licenses. Use Cursor Free + TrueFoundry key, or migrate to VS Code + Continue.dev/Cline + TrueFoundry.
+    Same AI coding experience, <strong>$0/month per developer in license fees</strong>.
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 16: COPILOT OPINION -->
+<!-- ============================================ -->
+<section>
+  <h2>GitHub Copilot: <span class="glow-blue">The Verdict</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Should we use Copilot? How does it compare to TrueFoundry + free tools?</p>
+
+  <div class="grid-2">
+    <div class="glass glass-accent" style="padding: 22px;">
+      <h3 style="font-size: 0.9em; color: #B794F6; margin-bottom: 12px;">GitHub Copilot Plans (2026)</h3>
+      <table style="font-size: 0.55em;">
+        <thead><tr><th>Plan</th><th>Cost</th><th>Key Limit</th></tr></thead>
+        <tbody>
+          <tr><td>Free</td><td>$0</td><td>2,000 completions + 50 chats/mo</td></tr>
+          <tr><td>Pro</td><td>$10/mo</td><td>Unlimited completions + chat</td></tr>
+          <tr><td>Pro+</td><td>$39/mo</td><td>+ Agent mode</td></tr>
+          <tr><td>Business</td><td>$19/user/mo</td><td>+ Admin, policies</td></tr>
+          <tr><td>Enterprise</td><td>$39/user/mo</td><td>+ Fine-tuning, IP</td></tr>
+        </tbody>
+      </table>
+      <div class="callout-warm" style="font-size: 0.5em; margin-top: 10px;">
+        <strong>Critical limitation:</strong> Copilot is a <strong>closed system</strong>.
+        You CANNOT point it to TrueFoundry. It uses GitHub's own API.
+        You're locked into their models and pricing.
+      </div>
+    </div>
+    <div>
+      <h3 style="font-size: 0.9em; color: var(--accent2); margin-bottom: 12px;">TrueFoundry + Free Tools vs Copilot</h3>
+      <table style="font-size: 0.55em;">
+        <thead><tr><th>Feature</th><th>Copilot Business</th><th>TF + Free Tools</th></tr></thead>
+        <tbody>
+          <tr><td>License cost</td><td class="vs-red" style="color: var(--accent3);">$19/user/mo</td><td class="vs-green" style="color: var(--accent2);">$0</td></tr>
+          <tr><td>Model choice</td><td>GPT-4o (locked)</td><td style="color: var(--accent2);">141 models</td></tr>
+          <tr><td>Use own models</td><td style="color: var(--accent3);">No</td><td style="color: var(--accent2);">Yes (self-hosted)</td></tr>
+          <tr><td>Tab completion</td><td>Excellent</td><td>Good (Continue.dev)</td></tr>
+          <tr><td>Chat</td><td>Good</td><td>Good (Cline/Continue)</td></tr>
+          <tr><td>Agentic coding</td><td>Pro+ only ($39)</td><td style="color: var(--accent2);">Cline (free)</td></tr>
+          <tr><td>Data privacy</td><td>Cloud (GitHub)</td><td style="color: var(--accent2);">Internal TF gateway</td></tr>
+          <tr><td>Cost visibility</td><td>Fixed per-seat</td><td style="color: var(--accent2);">Per-token in TF</td></tr>
+        </tbody>
+      </table>
+      <div class="callout-green" style="font-size: 0.5em; margin-top: 10px;">
+        <strong>Opinion:</strong> Copilot is excellent for tab completion, but it's a <strong>closed, paid ecosystem</strong>.
+        With TrueFoundry, you get more model choice, better data privacy (internal endpoint),
+        and <strong>zero license fees</strong>. The AI quality is comparable or better with Claude/Llama.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 17: TOTAL COST OF OWNERSHIP -->
+<!-- ============================================ -->
+<section>
+  <h2>Total Cost: <span class="glow-green">Per Developer Per Month</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 18px;">Assuming 20 developers, comparing all options</p>
 
   <table>
     <thead>
       <tr>
-        <th>Model</th>
-        <th>Provider</th>
-        <th>Input (per 1M tokens)</th>
-        <th>Output (per 1M tokens)</th>
-        <th>Best For</th>
+        <th>Setup</th>
+        <th>License/Dev/Mo</th>
+        <th>API Cost/Dev/Mo</th>
+        <th>Total/Dev/Mo</th>
+        <th>20 Devs/Mo</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><code>llama-3-3-70b-chat</code></td>
-        <td>Groq</td>
-        <td style="color: var(--accent2);">~$0.59</td>
-        <td style="color: var(--accent2);">~$0.79</td>
-        <td>Fast, cheap, general purpose</td>
+        <td style="font-weight:600;">Cursor Pro + Claude API</td>
+        <td style="color: var(--accent3);">$20</td>
+        <td>~$30-50</td>
+        <td style="color: var(--accent3);">$50-70</td>
+        <td style="color: var(--accent3);">$1,000-1,400</td>
       </tr>
       <tr>
-        <td><code>gemini-2-5-flash</code></td>
-        <td>Vertex</td>
-        <td style="color: var(--accent2);">~$0.15</td>
-        <td style="color: var(--accent2);">~$0.60</td>
-        <td>Cheapest with reasoning</td>
+        <td style="font-weight:600;">Copilot Business + Claude API</td>
+        <td style="color: var(--accent3);">$19</td>
+        <td>~$30-50</td>
+        <td style="color: var(--accent3);">$49-69</td>
+        <td style="color: var(--accent3);">$980-1,380</td>
       </tr>
       <tr>
-        <td><code>gpt-4o-mini</code></td>
-        <td>Azure</td>
-        <td style="color: var(--accent5);">~$0.15</td>
-        <td style="color: var(--accent5);">~$0.60</td>
-        <td>Balanced cost/quality</td>
+        <td style="font-weight:600;">Copilot Pro only</td>
+        <td style="color: var(--accent5);">$10</td>
+        <td>$0 (included)</td>
+        <td style="color: var(--accent5);">$10</td>
+        <td style="color: var(--accent5);">$200</td>
       </tr>
-      <tr>
-        <td><code>deepseek-r1-70b</code></td>
-        <td>Self-Hosted</td>
-        <td style="color: var(--accent2);">~$0.00*</td>
-        <td style="color: var(--accent2);">~$0.00*</td>
-        <td>Free (infra cost only)</td>
+      <tr style="background: rgba(0,212,170,0.06);">
+        <td style="font-weight:600; color: var(--accent2);">Cursor Free + TrueFoundry</td>
+        <td style="color: var(--accent2);">$0</td>
+        <td>~$5-20 (cheaper models)</td>
+        <td style="color: var(--accent2);">$5-20</td>
+        <td style="color: var(--accent2);">$100-400</td>
       </tr>
-      <tr>
-        <td><code>claude-sonnet-4</code></td>
-        <td>Bedrock</td>
-        <td style="color: var(--accent3);">~$3.00</td>
-        <td style="color: var(--accent3);">~$15.00</td>
-        <td>Best quality coding</td>
-      </tr>
-      <tr>
-        <td><code>claude-opus-4</code></td>
-        <td>Bedrock</td>
-        <td style="color: var(--accent6);">~$15.00</td>
-        <td style="color: var(--accent6);">~$75.00</td>
-        <td>Most capable, expensive</td>
+      <tr style="background: rgba(0,212,170,0.08);">
+        <td style="font-weight:600; color: var(--accent2);">VS Code + Cline + TrueFoundry</td>
+        <td style="color: var(--accent2);">$0</td>
+        <td>~$5-20 (cheaper models)</td>
+        <td style="color: var(--accent2);">$5-20</td>
+        <td style="color: var(--accent2);">$100-400</td>
       </tr>
     </tbody>
   </table>
 
-  <div class="callout-green" style="margin-top: 14px; font-size: 0.62em;">
-    <strong>Cost saving strategy:</strong> Use <code>llama-3-3-70b</code> or <code>gemini-2-5-flash</code> for development/testing (10-100x cheaper).
-    Switch to Claude/GPT for final validation only. TrueFoundry makes this a 1-line change.
-    <br><span style="color: var(--dim);">* Self-hosted models have infrastructure costs but no per-token charges.</span>
+  <div class="grid-2" style="margin-top: 16px;">
+    <div class="callout-green" style="font-size: 0.58em;">
+      <strong>Savings with TrueFoundry approach:</strong><br>
+      vs Cursor Pro: <strong>$600-1,000/month</strong> for 20 devs<br>
+      vs Copilot Business: <strong>$580-980/month</strong> for 20 devs<br>
+      <strong>$7,200-12,000/year saved</strong> in license fees alone.
+      <br>Plus cheaper API costs via Llama/Gemini for daily work.
+    </div>
+    <div class="callout-blue" style="font-size: 0.58em;">
+      <strong>Why API costs are lower with TF:</strong><br>
+      Devs use <code>llama-3-3-70b</code> (~$0.59/1M tokens) for 90% of work.<br>
+      Only switch to <code>claude-sonnet-4</code> (~$3/1M) for complex tasks.<br>
+      Self-hosted <code>deepseek-r1</code> is free (infra only).<br>
+      <strong>10-100x cheaper than always using Claude.</strong>
+    </div>
   </div>
+</section>
 </section>
 
 <!-- ============================================ -->
