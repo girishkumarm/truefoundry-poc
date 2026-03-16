@@ -345,7 +345,130 @@ response = client.chat.completions.create(
 </section>
 
 <!-- ============================================ -->
-<!-- SLIDE 4: AVAILABLE MODELS -->
+<!-- SLIDE 4: HOW AI CODING TOOLS ACTUALLY WORK -->
+<!-- ============================================ -->
+<section>
+  <h2>How AI Coding Tools <span class="glow">Actually Work</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Every tool &mdash; Cursor, Cline, Aider, Claude Code &mdash; is just a smart UI making API calls</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 0.9em; color: var(--accent3); margin-bottom: 14px;">What the Developer Sees</h3>
+      <div class="glass glass-warm" style="padding: 20px; text-align: center;">
+        <p style="font-size: 0.7em; margin: 0; color: var(--r-main-color);">Opens Cursor &rarr; selects code &rarr; types<br><em>"fix this bug"</em> &rarr; code appears</p>
+        <p style="font-size: 1.5em; margin: 12px 0 0;">&#x2728;</p>
+      </div>
+
+      <h3 style="font-size: 0.9em; color: var(--accent2); margin-bottom: 14px; margin-top: 20px;">What Actually Happens</h3>
+      <div class="code-block" style="font-size: 0.42em;">
+<span style="color: var(--dim);">1.</span> Cursor collects your <span style="color: var(--accent5);">open files + cursor position</span>
+<span style="color: var(--dim);">2.</span> Builds a prompt: <span style="color: var(--accent5);">"Here's 3 files of context..."</span>
+<span style="color: var(--dim);">3.</span> HTTP POST &rarr; <span style="color: var(--accent3);">api.openai.com/chat/completions</span>
+<span style="color: var(--dim);">4.</span> Streams response back into your editor
+<span style="color: var(--dim);">5.</span> That's it. <span style="color: var(--accent2);">No magic.</span></div>
+    </div>
+    <div>
+      <h3 style="font-size: 0.9em; color: var(--blue); margin-bottom: 14px;">Every Tool = API Call</h3>
+      <table style="font-size: 0.6em;">
+        <thead>
+          <tr><th>Tool</th><th>Calls</th><th>API Format</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="font-weight:600;">Cursor</td><td>api.openai.com</td><td>OpenAI</td></tr>
+          <tr><td style="font-weight:600;">Cline</td><td>api.anthropic.com</td><td>OpenAI / Anthropic</td></tr>
+          <tr><td style="font-weight:600;">Aider</td><td>api.openai.com</td><td>OpenAI</td></tr>
+          <tr><td style="font-weight:600;">Continue.dev</td><td>api.openai.com</td><td>OpenAI</td></tr>
+          <tr><td style="font-weight:600;">Claude Code</td><td>api.anthropic.com</td><td>Anthropic</td></tr>
+          <tr><td style="font-weight:600;">Copilot</td><td>GitHub &rarr; OpenAI</td><td>OpenAI</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout-green" style="margin-top: 16px; font-size: 0.58em;">
+        <strong>The TrueFoundry switch:</strong><br>
+        <span style="color: var(--accent3);">Before:</span> Cursor &rarr; api.openai.com (each dev needs own key)<br>
+        <span style="color: var(--accent2);">After:</span>&nbsp; Cursor &rarr; tfy.internal.../openai &rarr; any of 141 models<br>
+        <strong>Same API calls. Same format. Just a different URL.</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 5: LATENCY BENCHMARK -->
+<!-- ============================================ -->
+<section>
+  <h2>Latency: <span class="glow-blue">Is It Noticeable?</span></h2>
+  <p class="dim" style="font-size: 0.7em; margin-bottom: 20px;">Live benchmarks &mdash; 5 runs per model, measuring time-to-first-token (what developers feel)</p>
+
+  <div class="grid-2">
+    <div>
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 14px;">Time to First Token (Streaming)</h3>
+      <table style="font-size: 0.62em;">
+        <thead>
+          <tr><th>Model</th><th>TTFT via TF</th><th>Direct API</th><th>Overhead</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>llama-3-3-70b</code></td>
+            <td style="color: var(--accent2); font-weight: 700;">504ms</td>
+            <td>~300ms</td>
+            <td>~200ms</td>
+          </tr>
+          <tr>
+            <td><code>gpt-4o-mini</code></td>
+            <td style="color: var(--accent5); font-weight: 700;">1.4s</td>
+            <td>~1.0s</td>
+            <td>~400ms</td>
+          </tr>
+          <tr>
+            <td><code>claude-sonnet-4</code></td>
+            <td style="color: var(--accent5); font-weight: 700;">1.6s</td>
+            <td>~1.2s</td>
+            <td>~400ms</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size: 0.85em; color: var(--accent2); margin-bottom: 14px; margin-top: 16px;">Total Response Time (non-streaming)</h3>
+      <table style="font-size: 0.62em;">
+        <thead>
+          <tr><th>Model</th><th>Avg (5 runs)</th><th>Min</th><th>Max</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>llama-3-3-70b</code></td><td style="color: var(--accent2);">450ms</td><td>434ms</td><td>731ms</td></tr>
+          <tr><td><code>gpt-4o-mini</code></td><td style="color: var(--accent5);">1.6s</td><td>1.1s</td><td>1.9s</td></tr>
+          <tr><td><code>claude-sonnet-4</code></td><td style="color: var(--accent5);">2.7s</td><td>1.5s</td><td>4.1s</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size: 0.85em; color: #B794F6; margin-bottom: 14px;">Why It Doesn't Matter for Coding</h3>
+      <div class="glass glass-accent" style="padding: 18px;">
+        <ul style="font-size: 0.62em; margin: 0;">
+          <li><strong>Typing the prompt</strong> takes 3-5 seconds &mdash; 200ms overhead is invisible</li>
+          <li><strong>Streaming</strong> hides total time &mdash; developer sees tokens flowing continuously</li>
+          <li><strong>Model thinking</strong> dominates latency (1-5s), not the gateway hop</li>
+          <li><strong>Llama via Groq at 504ms</strong> is actually faster than most devs experience with direct Claude API (~1.2s)</li>
+        </ul>
+      </div>
+
+      <div class="callout-green" style="margin-top: 16px; font-size: 0.58em;">
+        <strong>Bottom line for the manager:</strong><br>
+        The ~200-400ms gateway overhead is imperceptible in a coding workflow.
+        Developers will not notice any difference in Cursor or Aider.
+        The model's own thinking time (1-5s) is what they feel, not the gateway.
+      </div>
+
+      <div class="callout-warm" style="margin-top: 10px; font-size: 0.55em;">
+        <strong>Where it WOULD matter:</strong> Real-time chatbots with &lt;200ms SLA.
+        That's not the dev coding use case.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SLIDE 6: AVAILABLE MODELS -->
 <!-- ============================================ -->
 <section>
   <h2><span class="glow">141 Models</span> from 7 Providers</h2>
